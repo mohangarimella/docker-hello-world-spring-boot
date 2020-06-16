@@ -1,59 +1,55 @@
-node {
-    // reference to maven
-    // ** NOTE: This 'maven-3.6.1' Maven tool must be configured in the Jenkins Global Configuration.   
-    def mvnHome = tool 'maven-3.6.1'
-
-    // holds reference to docker image
-    def dockerImage
-    // ip address of the docker private repository(nexus)
+pipeline
+{
+   environment {
+    //registry = "https://hub.docker.com/repository/docker/mohangarimella/personsample"
+    registry = "https://index.docker.io/mohangarimella/personsample"
+    registryCreds = 'dockerhub'
+    dockerImage = ''
+  }    
+   agent any
     
-    def dockerRepoUrl = "localhost:8083"
-    def dockerImageName = "hello-world-java"
-    def dockerImageTag = "${dockerRepoUrl}/${dockerImageName}:${env.BUILD_NUMBER}"
-    
-    stage('Clone Repo') { // for display purposes
-      // Get some code from a GitHub repository
-      git 'https://github.com/dstar55/docker-hello-world-spring-boot.git'
-      // Get the Maven tool.
-      // ** NOTE: This 'maven-3.6.1' Maven tool must be configured
-      // **       in the global configuration.           
-      mvnHome = tool 'maven-3.6.1'
-    }    
-  
-    stage('Build Project') {
-      // build project via maven
-      sh "'${mvnHome}/bin/mvn' -Dmaven.test.failure.ignore clean package"
-    }
-	
-	stage('Publish Tests Results'){
-      parallel(
-        publishJunitTestsResultsToJenkins: {
-          echo "Publish junit Tests Results"
-		  junit '**/target/surefire-reports/TEST-*.xml'
-		  archive 'target/*.jar'
-        },
-        publishJunitTestsResultsToSonar: {
-          echo "This is branch b"
-      })
-    }
+tools 
+  {
+    maven 'MAVEN_HOME'
+    //Docker docker
+  }
+  stages
+  {
+	 stage('Clone Repository')
+    {
+       steps{
+			// Get some code from a GitHub repository
+			//git 'https://758b8dfcc43de1f727737d85ab07cbd4f47ee39f@github.com/mohangarimella/HelloWorldForDevOps'
+        
+          git 'https://758b8dfcc43de1f727737d85ab07cbd4f47ee39f@github.com/mohangarimella/docker-hello-world-spring-boot'
+       }
+	   }
+	stage('Build Maven Image')
+	{
+       steps{
+		sh 'mvn install'
+		sh 'echo build done....'
+		//sh 'docker build -t demo . -f src/main/docker/Dockerfile'
 		
-    stage('Build Docker Image') {
-      // build docker image
-      sh "whoami"
-      sh "ls -all /var/run/docker.sock"
-      sh "mv ./target/hello*.jar ./data" 
+       }    
       
-      dockerImage = docker.build("hello-world-java")
-    }
-   
-    stage('Deploy Docker Image'){
-      
-      // deploy docker image to nexus
+	}
+    stage('Docker push')
+    {
+      steps{
+          script{
+                //image='sample'+ + ":$BUILD_NUMBER"
+                //dockerImage=docker.build "mohangarimella/personsample" + ":$BUILD_NUMBER"
+                dockerImage = docker.build("mohangarimella/personsample:$BUILD_NUMBER")
 
-      echo "Docker Image Tag Name: ${dockerImageTag}"
-
-      sh "docker login -u admin -p admin123 ${dockerRepoUrl}"
-      sh "docker tag ${dockerImageName} ${dockerImageTag}"
-      sh "docker push ${dockerImageTag}"
+                //docker.withRegistry('https://464032280033.dkr.ecr.us-east-1.amazonaws.com/sample-microservice', 'ecr:us-east-1:ECR') {
+                docker.withRegistry('https://registry-1.docker.io/v2/','dockerhub'){
+                //docker.image('demo').push('1.6')
+                dockerImage.push()
+                }
+      }
     }
+}
+  }
+ 
 }
