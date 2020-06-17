@@ -9,7 +9,7 @@ public class HelloController {
     
     @RequestMapping("/")
     public String index() {
-        return "<H3><center><p style='color:red'>This is Capgemini's DevOps solution world\n</p></center></H3>";
+        return "<H1><center><p style='color:red'>This is Capgemini's DevOps solution for Kubernetes world\n</p></center></H1>";
     }
     
 }
