@@ -9,7 +9,7 @@ public class HelloController {
     
     @RequestMapping("/")
     public String index() {
-        return "<H1><center><p style='color:red'>This is a Demo using spinnaker for different Kubernetes versions\n</p></center></H1>";
+        return "<H1><center><p style='color:blue'>This is a Demo using spinnaker for different Kubernetes versions for Synchrony\n</p></center></H1>";
     }
     
 }
